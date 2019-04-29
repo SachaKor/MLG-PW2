@@ -147,6 +147,8 @@ With this configuration the performance of the model is:
 [[746.   7.]  
  [  8. 911.]]
 
+__Making predictions__  
+
 After performing a few tests on our model using the function `mf_predict()`, we notice that the model distinguishes well men and women natural voices and recognizes the kids' voices as the female ones. But when it comes to synthetized voices, the model seems to have troubles on distinguishing men and women voices.  
 
 #### 3.2. Woman vs. Kid  
@@ -224,7 +226,45 @@ __Comparison with the initial model__
 
  After performing several predictions on the audios using the funciton `wk_predict()`, we notice that the model distinguishes well between the female's and kid's natural voices. It also makes the right predictions on female's synthetized voices. But sometimes it classifies the kid's synthetized voice as the female one. The model also tends to recognize the male voice as the female one. This result is intuitive and corresponds to our expectations.
 
+#### 3.3 Man vs. Woman vs. Kid  
 
+The model with the previous configuration gives the following performance:  
 
+* `MSE training:`  0.0079  
+* `MSE test:`  0.0505  
+* `Confusion matrix:`  
+[[3563.  736.]  
+ [ 741.  730.]]  
 
-#### 3.3 Man vs. Woman vs. Kid
+To see if we can improve the model, we will proceed as before.   
+Below are some figures that helped us to determine the final configuration.  
+
+![](./img/MWK_M0.3L0.001.png)
+*Figure 14*  
+![](./img/MWK_M0.5L0.001.png)  
+*Figure 15*  
+![](./img/MWK_M0.7L0.001.png)    
+*Figure 16*  
+![](./img/MWK_M0.5L0.001N60.png)
+*Figure 17*  
+
+*Figures 14, 15* and *16* show that *M*=0.5 is the optimal value for Momentum. *Figure 17* shows that the number of neurons in the hidden layer *N*=50 give the better MSE values than *N*=40 and *N*=60. Therefore, the final model's configuration is:  
+
+```
+M = 0.5      # momentum
+L = 0.001    # learning rate
+E = 60       # epochs
+K = 5        # number of folds
+N = 50       # number of neurons
+N_TESTS = 10 # number of tests
+```   
+And its performance is:  
+* `MSE training:`  0.0025  
+* `MSE test:`  0.0439  
+* `Confusion matrix:`  
+[[3561.  743.]  
+ [ 747.  738.]]  
+
+__Making predictions__  
+
+A few predictions were made on the model using the function `mwk_predict()`. All the results corresponded to the real classes of the audios. But this can be the result of a lucky pick of the audios. Synthetized voices are also correctly classified.  
