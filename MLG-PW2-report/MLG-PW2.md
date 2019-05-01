@@ -9,7 +9,7 @@
 | ![](./img/spread_0.4.png)      | ![](./img/spread_0.5.png) | ![](./img/spread_0.6.png) |   ![](./img/spread_0.7.png) |  
 *Figure 1*  
 __Data__  
-As we can see, we vary the `spread` parameter from 0.4 to 0.7 with 0.1 step. For every `spread` value we determine the dataset. The dataset is composed of two groups of points (red, blue). Every point is defined by its coordinates (x, y) in the 2-dimensional space. In every group, the points are distributed uniformly within the y axis (from -1 to 1) and normally (gaussian) distributed within the x axis. The red groups of points is distributed around the mean of -1, whereas the blue points are distributed around the mean of 1. The `spread` parameter is actually the value of the standard deviation of each dataset.  
+As we can see, we vary the `spread` parameter from 0.4 to 0.7 with 0.1 step. For every `spread` value we determine the dataset. The dataset is composed of two groups of points (red, blue). Every point is defined by its coordinates (x, y) in the 2-dimensional space. In every group, the points are distributed uniformly within the y axis (from -1 to 1) and normally (gaussian) distributed within the x axis. The red group of points is distributed around the mean of -1, whereas the blue points are distributed around the mean of 1. The `spread` parameter is actually the value of the standard deviation of each dataset.  
 Bigger is the `spread`, more two groups overlap. This is why the classification becomes less performant when we increase the value of the `spread`.  
 
 __Topology__   
@@ -92,7 +92,29 @@ This can be the result of several manipulations performed to obtain the final re
 * We split the data *k* times into training and test sets. This is why the class attributed to the input has much less chances to be the result of lucky/unlucky initialization.  
 * We use the average result among *k* generated models. It also makes the dispersion of the MSE lower.   
 
-### 3. Speaker recognition experiments   
+### 3. Speaker recognition experiments    
+__Description__  
+
+The notebook is placed in the `speaker_recognition` directory.
+
+This notebook is divided into 6 main parts. In the first __Data extraction__ part we extract the 13 features from the audios database contained in `./speaker_recognition/vowels` directory. In next four parts the models that determine
+* wether the audio corresponds to the male or female voice ( __Man vs Woman__ )
+* wether the audio corresponds to the female or kid voice ( __Woman vs Kid__ )
+* wether the audio corresponds to the female, kid or male voice ( __Man vs Woman vs Kid__ )
+* wether the audio corresponds to the natural or synthetized voice ( __Natural vs Synthetized__ )
+
+are built.  
+The last __Custom experiment__ part contains the experiment made on the custom collection of the audios. These audios are put in the `./speaker_recognition/vowels/custom` directory.  
+__NOTE:__ the audios from the initial database (vowels) are not submitted and must be put in the `./speaker_recognition/vowels` directory.  
+
+Some of the functions are not used to build the final models.  
+The entire commented cells contain the expriments. The results are stored in `./speaker_recognition/experiments/` directory. This directory contains 4 subdirectories:
+* `/MW` for the __Man vs Woman__ experiments
+* `/WK` for the __Woman vs Kid__ experiments
+* `/MWK` for the __Man vs Woman vs Kid__ experiments
+* `/NS` for the __Natural vs Synthetized__ experiments
+
+The results of all experiments are stored as numpy arrays in the files with `.npy` extension and follow the following file name convention: `{i}_M{X}L{Y}N{Z}_test.npy` or `{i}_M{X}L{Y}N{Z}_train.npy`. `i` is the index of the test. `X` and `Y` are the Momentum and Learning Rate values respectively. The filenames ending with `_train` correspond to the training MSE and those that end with `_test` correspond to the testing MSE of the model. The numpy arrays stored in these files are of the shape *(len(N_NEURONS), EPOCHS, N_TESTS)*, where *N_NEURONS* is the list containing all the tested numer of neurons in the hidden layer, *EPOCHS* is the numer of epochs and *N_TESTS* is the number of weights initializations.
 To extract the data, we first read all the audios with `scipy.io.wavfile` library and tranformed the result into features using `mfcc` tool.
 The resulting dataset is composed of 360 2d lists. Every list represents a fragment of an audio. All of 13 features are calculated for each fragment.  
 
@@ -226,7 +248,7 @@ __Comparison with the initial model__
 
  After performing several predictions on the audios using the funciton `wk_predict()`, we notice that the model distinguishes well between the female's and kid's natural voices. It also makes the right predictions on female's synthetized voices. But sometimes it classifies the kid's synthetized voice as the female one. The model also tends to recognize the male voice as the female one. This result is intuitive and corresponds to our expectations.
 
-#### 3.3 Man vs. Woman vs. Kid  
+#### 3.3. Man vs. Woman vs. Kid  
 
 The model with the previous configuration gives the following performance:  
 
@@ -266,5 +288,62 @@ And its performance is:
  [ 747.  738.]]  
 
 __Making predictions__  
+A few predictions were made on the model using the function `mwk_predict()`. All the results corresponded to the real classes of the audios. But this can be the result of a lucky pick of the audios. Synthetized voices are also correctly classified.   
 
-A few predictions were made on the model using the function `mwk_predict()`. All the results corresponded to the real classes of the audios. But this can be the result of a lucky pick of the audios. Synthetized voices are also correctly classified.  
+#### 3.4. Natural vs Synthetized  
+For this section, the model was trained to distinguish the natural voice from the synthetized one.  
+The procedure of Model Selection is the similar to the previous section.  
+Below is the configuration of the final model:  
+```
+M = 0.1      # momentum
+L = 0.001    # learning rate
+E = 60       # epochs
+K = 5        # number of folds
+N = 45       # number of neurons
+N_TESTS = 10 # number of tests
+```
+
+And the model's performance measures are:
+* `MSE training:`  0.0056  
+* `MSE test:`  0.0306  
+* `Confusion matrix:`  
+[[4484.   54.]  
+ [  30. 4569.]]
+
+__Making predictions__  
+After making several predictions on the audios from the dataset provided, we can conclude that the system classifies well the natural and synthetized voices.  
+
+#### 3.5. Performance Measures  
+The following table contains the summary of the performance measures for the selected models.  
+
+`mw_nn`: Man vs Woman  
+`wk_nn`: Woman vs Kid  
+`mwk_nn`: Man vs Woman vs Kid  
+`ns_nn`: Natural vs Synthetized
+
+Note that the numbers can differ from the ones given in the previous sections (MSE, confustion matrix), because of the random weights initialization.
+
+| Model | MSE training | MSE test | Precision | Recall | Accuracy | F1-score |
+|:-------------:|:-------------:|:-----:|:---:|:---:|:---:|:---:|  
+| `mw_nn`      | 0.0027| 0.0314 | 0.9894 |0.9907 | 0.991 | 0.4950 |  
+| `wk_nn`      | 0.00589 | 0.0765 | 0.9874 | 0.9829 | 0.9775 | 0.4926 |  
+| `mwk_nn` | 0.0023 | 0.0407 | 0.8272 | 0.8264 | 0.7424 | 0.4134 |  
+| `ns_nn` | 0.0056 | 0.0306 | 0.9934 | 0.9881 | 0.9908 | 0.4954 |  
+*Table 1*  
+
+The __Precision__, __Recall__, __Accuracy__ and __F1-score__ measures were calculated using the `performance()` function from the __Performance Measures__ section of the notebook.   
+
+#### 3.6. Custom Experiment  
+In this section, we are testing the final models on the small collection of custom audios containing 2 samples of Natural Adult Female voices ( `sasha.wav` and `ksu.wav`) and 5 samples of Natural Adult Male voices (`danya.wav`, `joe_rogan.wav` and `samX.wav`).
+These audios are placed in the `speaker_recognition/vowels/custom` directory.   
+The tests are performed using `mf_predict()`, `wk_predict()`, `mwk_predict()` and `ns_predict()` functions and are executed in the *Custom Experiment* section of the notebook.  
+All the models perform well on female voice samples, but the predictions made on the male voices are different from our expectations.  
+As our collection is too small to make a statistical analysis of the models on custom data, we visualised the audios to compare them to the ones from the initial dataset.  
+*Table 2* below shows the difference between a custom male voice sample and the audio from the given dataset.  
+
+| Natural       | Custom           |
+|:-------------:|:-------------:|
+| ![](./img/joe.png)      | ![](./img/natural_male.png) |  
+*Table 2*  
+
+ These images explain the probable reason of the unsatisfying results: the custom samples are not "normalized". They contain the gaps and the noise.
